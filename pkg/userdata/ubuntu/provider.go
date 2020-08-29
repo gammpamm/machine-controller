@@ -269,6 +269,7 @@ write_files:
       socat \
       util-linux \
       docker-ce \
+      open-iscsi \
       {{- if eq .CloudProviderName "vsphere" }}
       open-vm-tools \
       {{- end }}
