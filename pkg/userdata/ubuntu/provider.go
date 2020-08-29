@@ -268,7 +268,7 @@ write_files:
       nfs-common \
       socat \
       util-linux \
-      docker.io \
+      docker-ce \
       {{- if eq .CloudProviderName "vsphere" }}
       open-vm-tools \
       {{- end }}
