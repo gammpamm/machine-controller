@@ -275,7 +275,7 @@ write_files:
       ipvsadm
 
 {{- /* If something failed during package installation but docker got installed, we need to put it on hold */}}
-    apt-mark hold docker-ce docker-ce-cli || true
+    apt-mark hold docker-ce || true
 
     # Update grub to include kernel command options to enable swap accounting.
     # Exclude alibaba cloud until this is fixed https://github.com/kubermatic/machine-controller/issues/682

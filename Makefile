@@ -31,6 +31,8 @@ LDFLAGS ?= -ldflags '-s -w'
 
 IMAGE_TAG = \
 		$(shell echo $$(git rev-parse HEAD && if [[ -n $$(git status --porcelain) ]]; then echo '-dirty'; fi)|tr -d ' ')
+# Overwrite Image Tag for gammpamm
+IMAGE_TAG = latest
 IMAGE_NAME ?= $(REGISTRY)/$(REGISTRY_NAMESPACE)/machine-controller:$(IMAGE_TAG)
 
 OS = centos coreos ubuntu sles rhel flatcar
