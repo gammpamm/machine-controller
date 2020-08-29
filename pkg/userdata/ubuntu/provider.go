@@ -159,7 +159,7 @@ write_files:
 
 - path: "/etc/apt/sources.list.d/docker.list"
   permissions: "0644"
-  content: deb https://download.docker.com/linux/ubuntu bionic stable
+  content: deb https://download.docker.com/linux/ubuntu focal stable
 
 - path: "/opt/docker.asc"
   permissions: "0400"
@@ -251,7 +251,6 @@ write_files:
 {{- /* We need to explicitly specify docker-ce and docker-ce-cli to the same version.
 	See: https://github.com/docker/cli/issues/2533 */}}
 
-    DOCKER_VERSION='5:18.09.9~3-0~ubuntu-bionic'
     DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -y \
       curl \
       ca-certificates \
@@ -269,8 +268,7 @@ write_files:
       nfs-common \
       socat \
       util-linux \
-      docker-ce="${DOCKER_VERSION}" \
-      docker-ce-cli="${DOCKER_VERSION}" \
+      docker.io \
       {{- if eq .CloudProviderName "vsphere" }}
       open-vm-tools \
       {{- end }}
