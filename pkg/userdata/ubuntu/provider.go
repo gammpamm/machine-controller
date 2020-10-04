@@ -49,6 +49,11 @@ func (p Provider) UserData(req plugin.UserDataRequest) (string, error) {
 		return "", fmt.Errorf("invalid kubelet version: %v", err)
 	}
 
+	dockerVersion, err := userdatahelper.DockerVersionApt(kubeletVersion)
+	if err != nil {
+		return "", fmt.Errorf("invalid docker version: %v", err)
+	}
+
 	pconfig, err := providerconfigtypes.GetConfig(req.MachineSpec.ProviderSpec)
 	if err != nil {
 		return "", fmt.Errorf("failed to get providerSpec: %v", err)
@@ -88,6 +93,7 @@ func (p Provider) UserData(req plugin.UserDataRequest) (string, error) {
 		OSConfig         *Config
 		ServerAddr       string
 		KubeletVersion   string
+		DockerVersion    string
 		Kubeconfig       string
 		KubernetesCACert string
 		NodeIPScript     string
@@ -97,6 +103,7 @@ func (p Provider) UserData(req plugin.UserDataRequest) (string, error) {
 		OSConfig:         ubuntuConfig,
 		ServerAddr:       serverAddr,
 		KubeletVersion:   kubeletVersion.String(),
+		DockerVersion:    dockerVersion,
 		Kubeconfig:       kubeconfigString,
 		KubernetesCACert: kubernetesCACert,
 		NodeIPScript:     userdatahelper.SetupNodeIPEnvScript(),
@@ -159,7 +166,7 @@ write_files:
 
 - path: "/etc/apt/sources.list.d/docker.list"
   permissions: "0644"
-  content: deb https://download.docker.com/linux/ubuntu focal stable
+  content: deb https://download.docker.com/linux/ubuntu bionic stable
 
 - path: "/opt/docker.asc"
   permissions: "0400"
@@ -251,6 +258,7 @@ write_files:
 {{- /* We need to explicitly specify docker-ce and docker-ce-cli to the same version.
 	See: https://github.com/docker/cli/issues/2533 */}}
 
+    DOCKER_VERSION='{{ .DockerVersion }}'
     DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -y \
       curl \
       ca-certificates \
@@ -268,7 +276,8 @@ write_files:
       nfs-common \
       socat \
       util-linux \
-      docker-ce \
+      docker-ce="${DOCKER_VERSION}" \
+      docker-ce-cli="${DOCKER_VERSION}" \
       open-iscsi \
       {{- if eq .CloudProviderName "vsphere" }}
       open-vm-tools \
@@ -276,7 +285,7 @@ write_files:
       ipvsadm
 
 {{- /* If something failed during package installation but docker got installed, we need to put it on hold */}}
-    apt-mark hold docker-ce || true
+    apt-mark hold docker-ce docker-ce-cli || true
 
     # Update grub to include kernel command options to enable swap accounting.
     # Exclude alibaba cloud until this is fixed https://github.com/kubermatic/machine-controller/issues/682
@@ -358,7 +367,7 @@ write_files:
 
 - path: "/etc/kubernetes/kubelet.conf"
   content: |
-{{ kubeletConfiguration "cluster.local" .DNSIPs | indent 4 }}
+{{ kubeletConfiguration "cluster.local" .DNSIPs .KubeletFeatureGates | indent 4 }}
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
