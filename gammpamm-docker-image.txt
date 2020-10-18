@@ -1,3 +1,0 @@
-make docker-image
-docker login
-make docker-image-publish
